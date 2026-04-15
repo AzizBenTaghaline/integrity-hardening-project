@@ -1,0 +1,19 @@
+# Node modules
+node_modules/
+npm-debug.log
+
+# Variables d environnement
+.env
+*.env
+
+# Docker volumes
+pgdata/
+
+# Logs
+*.log
+/var/log/
+
+# Fichiers temporaires
+*.tmp
+*.swp
+.DS_Store

